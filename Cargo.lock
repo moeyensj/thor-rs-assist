@@ -410,7 +410,7 @@ dependencies = [
 [[package]]
 name = "thor-rs-propagator"
 version = "0.1.0"
-source = "git+https://github.com/moeyensj/thor-rs-propagator.git?rev=85d0f4471eedd7bbd1ea351f406823e4c0546d66#85d0f4471eedd7bbd1ea351f406823e4c0546d66"
+source = "git+https://github.com/moeyensj/thor-rs-propagator.git?rev=1a8903876f272634c4bff6a394406ed9b936e39e#1a8903876f272634c4bff6a394406ed9b936e39e"
 dependencies = [
  "serde",
  "thiserror",

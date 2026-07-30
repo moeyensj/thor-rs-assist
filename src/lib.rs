@@ -10,9 +10,9 @@
 //! data manager.
 //!
 //! Licensing: this crate's own source is BSD-3-Clause, but assist-rs and the
-//! ASSIST/REBOUND stack beneath it are GPL-3.0 — any combined binary is
-//! governed by the GPL. THOR keeps this backend behind an opt-in feature so
-//! its default artifacts stay GPL-free.
+//! ASSIST/REBOUND stack beneath it are GPL-3.0 — any binary that includes
+//! this backend is a GPL-3.0 combined work, which distributors must account
+//! for. THOR's release configuration keeps it out of prebuilt artifacts.
 
 // Inherited from the THOR source this adapter was extracted from: matrix
 // math uses index-based loops for clarity, and the trait methods carry full

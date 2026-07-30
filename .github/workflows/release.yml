@@ -1,6 +1,6 @@
 # Release: tag-triggered crates.io publish, gated on MANUAL SIGN-OFF.
 #
-# Pushing a vX.Y.Z tag runs `verify` (tag == Cargo version, tests, package)
+# Pushing a vX.Y.Z tag runs `verify` (tag == Cargo version, package check)
 # and then `publish-crates`, which PAUSES on the `crates-io` environment
 # until its required reviewer (moeyensj) approves the deployment in the UI —
 # the same gate the public empyrean repo uses. A fail-closed guard step

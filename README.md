@@ -57,11 +57,30 @@ thor-rs-assist = { git = "https://github.com/moeyensj/thor-rs-assist.git", rev =
 ## Quick start
 
 ```rust,no_run
-use thor_rs_propagator::{PropagationConfig, Propagator};
+use thor_rs_propagator::{
+    CartesianState, Frame, Origin, PropagationConfig, Propagator, PropagatorError, TestOrbit,
+};
 
-let prop = thor_rs_assist::AssistPropagator::from_data_manager()?;
-let states = prop.propagate(&my_test_orbit, &[60810.0], &PropagationConfig::default())?;
-# Ok::<(), thor_rs_propagator::PropagatorError>(())
+fn main() -> Result<(), PropagatorError> {
+    let orbit = TestOrbit {
+        id: "example_mba".into(),
+        object_id: None,
+        bundle_id: None,
+        nside: 0,
+        state: CartesianState {
+            x: 2.3, y: 1.0, z: 0.1,
+            vx: -0.005, vy: 0.009, vz: 0.0001,
+            epoch: 60800.0, // MJD TDB
+            frame: Frame::EclipticJ2000,
+            origin: Origin::Sun,
+            covariance: None,
+        },
+    };
+    let prop = thor_rs_assist::AssistPropagator::from_data_manager()?;
+    let states = prop.propagate(&orbit, &[60810.0], &PropagationConfig::default())?;
+    println!("propagated {} state(s)", states.len());
+    Ok(())
+}
 ```
 
 `from_data_manager()` downloads the SPICE kernels and obscodes table into
@@ -74,8 +93,8 @@ propagator and share it, and run data-touching tests single-threaded.
 Extracted 2026-07-30 from THOR v2's `src/propagator/assist.rs` (repository
 `moeyensj/thor_rust`), where the adapter and its integrator tuning were
 developed and production-tested. THOR consumes this crate behind its
-opt-in `assist` feature and keeps its end-to-end assist tests in-tree as a
-dev-dependency.
+`assist` feature and keeps its end-to-end assist tests in-tree behind that
+same feature.
 
 ## Acknowledgments
 
@@ -88,5 +107,5 @@ at the University of Washington.
 This crate's source: BSD 3-Clause ([LICENSE.md](LICENSE.md)). Its mandatory
 dependencies assist-rs / libassist-sys / librebound-sys are GPL-3.0, so any
 distributed binary containing this backend is a GPL-3.0 combined work —
-which is exactly why THOR ships it as an opt-in source feature rather than
-in prebuilt artifacts.
+which distributors must account for; THOR's release configuration keeps it
+out of prebuilt artifacts.
