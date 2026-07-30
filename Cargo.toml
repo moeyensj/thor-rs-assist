@@ -1,0 +1,22 @@
+[package]
+name = "thor-rs-assist"
+version = "0.1.0"
+description = "The fully-open ASSIST/REBOUND backend for THOR: IAS15 N-body propagation and astrometric ephemerides behind the thor-rs-propagator contract"
+authors = ["Joachim Moeyens <moeyensj@uw.edu>"]
+edition = "2024"
+rust-version = "1.94.0"
+license = "BSD-3-Clause"
+# Two-key publish guard; publishes AFTER thor-rs-propagator (registries
+# reject git dependencies).
+publish = false
+repository = "https://github.com/moeyensj/thor-rs-assist"
+documentation = "https://docs.rs/thor-rs-assist"
+keywords = ["astronomy", "asteroids", "orbits", "propagation", "assist"]
+categories = ["science", "aerospace"]
+exclude = [".github/", ".gitignore"]
+
+[dependencies]
+thor-rs-propagator = { git = "https://github.com/moeyensj/thor-rs-propagator.git", rev = "2f1a1dca6209d4e70e84a52d8de6d817fdc48c8b" }
+assist-rs = "0.1.0"
+hyperjet = "1.9.0"
+log = "0.4"
