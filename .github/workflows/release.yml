@@ -1,13 +1,16 @@
-# Release: tag-triggered crates.io publish — PRESENT BUT DISABLED.
+# Release: tag-triggered crates.io publish, gated on MANUAL SIGN-OFF.
 #
-# Publishing to crates.io uploads the crate SOURCE to a public registry.
-# This repository is private: do NOT enable publishing until the project is
-# cleared to go public. To enable, set the repository (or org) Actions
-# variable CRATES_IO_PUBLISH_ENABLED to 'true', delete `publish = false`
-# from Cargo.toml, and add a CARGO_REGISTRY_TOKEN
-# secret (or migrate to crates.io Trusted Publishing after the first manual
-# publish). The verify job always runs so tagging discipline is checked even
-# while publishing stays off.
+# Pushing a vX.Y.Z tag runs `verify` (tag == Cargo version, tests, package)
+# and then `publish-crates`, which PAUSES on the `crates-io` environment
+# until its required reviewer (moeyensj) approves the deployment in the UI —
+# the same gate the public empyrean repo uses. A fail-closed guard step
+# additionally refuses to publish if the environment ever loses its
+# required-reviewers rule. CARGO_REGISTRY_TOKEN must be present as an
+# environment-scoped secret on `crates-io`.
+#
+# ORDER: this crate publishes AFTER thor-rs-propagator is on crates.io — the
+# manifest's git dependency must be flipped to a registry version first, and
+# `verify`'s cargo package fails closed until it is.
 
 name: Release
 
@@ -31,23 +34,35 @@ jobs:
           VERSION="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; print([p["version"] for p in json.load(sys.stdin)["packages"] if p["name"]=="thor-rs-assist"][0])')"
           echo "tag=$TAG crate=$VERSION"
           test "$TAG" = "$VERSION"
-      - name: Test
-        run: cargo test
       - name: Package check
-        # `cargo package` performs the same packaging + verification build;
-        # `publish --dry-run` refuses while the manifest carries publish = false.
         run: cargo package
 
   publish-crates:
     needs: [verify]
-    # DISABLED until the project is cleared to go public — see header comment.
-    if: vars.CRATES_IO_PUBLISH_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment: crates-io
     steps:
+      - name: Require an armed reviewer gate (fail closed)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          env_name=crates-io
+          if ! rules=$(gh api "repos/${{ github.repository }}/environments/${env_name}" \
+                          --jq '[.protection_rules[].type] | join(",")' 2>/tmp/gate_err); then
+            echo "::error::Cannot read the '${env_name}' environment to verify its reviewer gate."
+            cat /tmp/gate_err || true
+            exit 1
+          fi
+          echo "'${env_name}' protection rules: ${rules:-<none>}"
+          case "$rules" in
+            *required_reviewers*) echo "OK: '${env_name}' requires a reviewer before publishing." ;;
+            *) echo "::error::'${env_name}' has no required-reviewers gate. Refusing to publish unreviewed."
+               echo "Arm it: repo Settings > Environments > ${env_name} > Required reviewers, then re-run."
+               exit 1 ;;
+          esac
+
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Publish thor-rs-assist
-        run: cargo publish --token "${CARGO_REGISTRY_TOKEN}"
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --token "${{ secrets.CARGO_REGISTRY_TOKEN }}"

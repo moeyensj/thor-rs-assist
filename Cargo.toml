@@ -6,10 +6,9 @@ authors = ["Joachim Moeyens <moeyensj@uw.edu>"]
 edition = "2024"
 rust-version = "1.94.0"
 license = "BSD-3-Clause"
-# Two-key publish guard; publishes AFTER thor-rs-propagator (registries
-# reject git dependencies).
-publish = false
+homepage = "https://github.com/moeyensj/thor"
 repository = "https://github.com/moeyensj/thor-rs-assist"
+readme = "README.md"
 documentation = "https://docs.rs/thor-rs-assist"
 keywords = ["astronomy", "asteroids", "orbits", "propagation", "assist"]
 categories = ["science", "aerospace"]
