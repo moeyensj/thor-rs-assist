@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        run: cargo fmt --check
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Build
+        run: cargo build --verbose
+
+      # The smoke test builds a real AssistPropagator: it needs JPL SPICE
+      # kernels + an MPC obscodes table. Cache them; write NO .meta.json
+      # sidecars so assist-rs trusts the files as-is and never touches the
+      # network in tests. (Ported from THOR's CI, which carried these steps
+      # while the adapter lived in-tree.)
+      - name: Cache ASSIST ephemeris + obscodes data
+        id: assist-data
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/assist-rs
+          key: assist-data-v1
+      - name: Download ASSIST data (SPICE kernels + minimal obscodes)
+        if: steps.assist-data.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          d="$HOME/.cache/assist-rs"
+          mkdir -p "$d"
+          dl() { curl -fSL --retry 5 --retry-delay 5 --retry-all-errors -o "$d/$1" "$2"; }
+          dl de440.bsp                          https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440.bsp
+          dl sb441-n16.bsp                      https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/asteroids_de441/sb441-n16.bsp
+          dl earth_latest_high_prec.bpc         https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/earth_latest_high_prec.bpc
+          dl earth_620120_250826.bpc            https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/earth_620120_250826.bpc
+          dl earth_2025_250826_2125_predict.bpc https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/earth_2025_250826_2125_predict.bpc
+          # minorplanetcenter.net is unreachable from GitHub runners; the smoke
+          # test only uses the geocentric observatory "500" (cos=sin=0), so a
+          # minimal obscodes table suffices.
+          printf '%s\n' '{"500":{"Name":"Geocentric","Longitude":0.0,"cos":0.0,"sin":0.0}}' > "$d/obscodes_extended.json"
+
+      - name: Test (single-threaded — REBOUND SPK reads are not thread-safe)
+        run: cargo test --verbose -- --test-threads=1
+
+      # No per-push `cargo package`: it fails closed on the thor-rs-propagator
+      # GIT dependency by design (registries reject git deps). The package
+      # gate lives in release.yml's verify job, where that refusal is the
+      # intended publish-order enforcement.

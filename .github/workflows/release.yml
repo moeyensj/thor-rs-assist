@@ -1,0 +1,53 @@
+# Release: tag-triggered crates.io publish — PRESENT BUT DISABLED.
+#
+# Publishing to crates.io uploads the crate SOURCE to a public registry.
+# This repository is private: do NOT enable publishing until the project is
+# cleared to go public. To enable, set the repository (or org) Actions
+# variable CRATES_IO_PUBLISH_ENABLED to 'true', delete `publish = false`
+# from Cargo.toml, and add a CARGO_REGISTRY_TOKEN
+# secret (or migrate to crates.io Trusted Publishing after the first manual
+# publish). The verify job always runs so tagging discipline is checked even
+# while publishing stays off.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Tag matches crate version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION="$(cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; print([p["version"] for p in json.load(sys.stdin)["packages"] if p["name"]=="thor-rs-assist"][0])')"
+          echo "tag=$TAG crate=$VERSION"
+          test "$TAG" = "$VERSION"
+      - name: Test
+        run: cargo test
+      - name: Package check
+        # `cargo package` performs the same packaging + verification build;
+        # `publish --dry-run` refuses while the manifest carries publish = false.
+        run: cargo package
+
+  publish-crates:
+    needs: [verify]
+    # DISABLED until the project is cleared to go public — see header comment.
+    if: vars.CRATES_IO_PUBLISH_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: crates-io
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish thor-rs-assist
+        run: cargo publish --token "${CARGO_REGISTRY_TOKEN}"
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
