@@ -55,7 +55,5 @@ jobs:
       - name: Test (single-threaded — REBOUND SPK reads are not thread-safe)
         run: cargo test --verbose -- --test-threads=1
 
-      # No per-push `cargo package`: it fails closed on the thor-rs-propagator
-      # GIT dependency by design (registries reject git deps). The package
-      # gate lives in release.yml's verify job, where that refusal is the
-      # intended publish-order enforcement.
+      - name: Package check (no publish)
+        run: cargo package

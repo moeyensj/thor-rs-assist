@@ -25,12 +25,9 @@ the dependency closure is open source, and because the ASSIST/REBOUND stack
 is GPL-3.0, any combined binary is governed by the GPL (this crate's own
 source is BSD-3-Clause).
 
-Not yet on crates.io (it publishes after `thor-rs-propagator`, its git
-dependency). Until then:
-
 ```toml
 [dependencies]
-thor-rs-assist = { git = "https://github.com/moeyensj/thor-rs-assist.git", rev = "<pin>" }
+thor-rs-assist = "0.1.0"
 ```
 
 ## What it does

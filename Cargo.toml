@@ -15,7 +15,7 @@ categories = ["science", "aerospace"]
 exclude = [".github/", ".gitignore"]
 
 [dependencies]
-thor-rs-propagator = { git = "https://github.com/moeyensj/thor-rs-propagator.git", rev = "1a8903876f272634c4bff6a394406ed9b936e39e" }
+thor-rs-propagator = "0.1.0"
 assist-rs = "0.1.0"
 hyperjet = "1.9.0"
 log = "0.4"

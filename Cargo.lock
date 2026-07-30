@@ -410,7 +410,8 @@ dependencies = [
 [[package]]
 name = "thor-rs-propagator"
 version = "0.1.0"
-source = "git+https://github.com/moeyensj/thor-rs-propagator.git?rev=1a8903876f272634c4bff6a394406ed9b936e39e#1a8903876f272634c4bff6a394406ed9b936e39e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c637f00c05badc91e20a40141bb2d4d16a3cd8957615450432b57a4cc9e79a5"
 dependencies = [
  "serde",
  "thiserror",
